@@ -1,9 +1,13 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+using System;
 
 public class PlayerMovement : MonoBehaviour
 {
+    public bool win;
+
     public Transform target;
     public Rigidbody rb;
     public float speed;
@@ -18,85 +22,74 @@ public class PlayerMovement : MonoBehaviour
     private bool rightDash;
     private bool leftDash;
     private float lastAngle;
+    private float now = 1f;
+    public float released = 0f;
+    public float maxToRelease;
+    public Slider slider;
+    public bool nowReleased;
 
     private void FixedUpdate()
     {
-        /*//print(lastAngle);
-        // dash
-        if (Input.GetAxis("RightDash") > 0f)
+        if (!win)
         {
-            print("rightDash");
-            lastAngle = transform.eulerAngles.z;
-            rightDash = true;
-        }
-
-        if (Input.GetAxis("LeftDash") > 0f)
-        {
-            print("leftDash");
-            lastAngle = transform.eulerAngles.z;
-            leftDash = true;
-        }
-
-        if (rightDash)
-        {
-            transform.Rotate(0f, 0f, 90f);
-            //transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.Euler(transform.rotation.x, transform.rotation.y, lastAngle + 360f), Time.deltaTime * 5f);
-            if (transform.eulerAngles.z == lastAngle + 90f)
+            /*if (released >= maxToRelease && gameOver == true)
             {
-                rightDash = false;
+                gameOver = false;
+                nowReleased = true;
             }
-            rightDash = false;
-        }
-
-        if (leftDash)
-        {
-            transform.Rotate(0f, 0f, -90f);
-            //transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.Euler(transform.rotation.x, transform.rotation.y, lastAngle -360f), Time.deltaTime * 5f);
-            if (transform.eulerAngles.z == lastAngle - 90f)
+            if (gameOver == true)
             {
-                leftDash = false;
-            }
-            leftDash = false;
-        }*/
-
-
-        // dead
-        if (dead)
-        {
-            ps.Play();
-            dead = false;
-        }
-
-
-
-        // movement
-        if (!isGrabbed && !gameOver)
-        {
-
-            if (Input.GetAxis("Jump") > 0f && isGrounded)
+                slider.gameObject.SetActive(true);
+                slider.value = released;
+                if (Mathf.RoundToInt(Input.GetAxis("Dash")) == now)
+                {
+                    now = now * -1f;
+                    released += 0.02f;
+                }
+                released -= 0.002f;
+                released = Mathf.Clamp(released, 0f, maxToRelease);
+            } else
             {
-                rb.AddForce(jumpForce * transform.up);
-            }
-            //transform.LookAt(target);
-            //transform.rotation = Quaternion.Euler(target.rotation.x, target.eulerAngles.y, target.rotation.z);
-            if ((Mathf.RoundToInt(Input.GetAxis("Horizontal")) != 0f || Mathf.RoundToInt(Input.GetAxis("Vertical")) != 0f))
+                slider.gameObject.SetActive(false);
+            }*/
+
+            // dead
+            if (dead)
             {
-                //transform.Rotate(0f, -27.456f, 0f);
-                rb.MovePosition(transform.forward * Time.deltaTime * -speed + transform.position);
+                ps.Play();
+                dead = false;
             }
+
+
+
+            // movement
+            if (!isGrabbed && !gameOver)
+            {
+
+                if (Input.GetAxis("Jump") > 0f && isGrounded)
+                {
+                    rb.AddForce(jumpForce * transform.up);
+                }
+                //transform.LookAt(target);
+                //transform.rotation = Quaternion.Euler(target.rotation.x, target.eulerAngles.y, target.rotation.z);
+                if ((Mathf.RoundToInt(Input.GetAxis("Horizontal")) != 0f || Mathf.RoundToInt(Input.GetAxis("Vertical")) != 0f))
+                {
+                    //transform.Rotate(0f, -27.456f, 0f);
+                    rb.MovePosition(transform.forward * Time.deltaTime * -speed + transform.position);
+                }
+            }
+
+
+            // Farmer`s grab
+            if (transform.position == grabPoint.position && transform.rotation == grabPoint.rotation || isGrabbed == true)
+            {
+                transform.position = grabPoint.position;
+                transform.rotation = Quaternion.Euler(grabPoint.eulerAngles.x, grabPoint.eulerAngles.y, transform.eulerAngles.z);
+                rb.useGravity = false;
+            }
+
         }
-
-
-        // Farmer`s grab
-        if (transform.position == grabPoint.position && transform.rotation == grabPoint.rotation || isGrabbed == true)
-        {
-            transform.position = grabPoint.position;
-            transform.rotation = Quaternion.Euler(grabPoint.eulerAngles.x, grabPoint.eulerAngles.y, transform.eulerAngles.z);
-            rb.useGravity = false;
-        }
-
     }
-
 }
 
 

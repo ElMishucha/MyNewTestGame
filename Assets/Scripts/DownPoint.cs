@@ -6,7 +6,8 @@ public class DownPoint : MonoBehaviour
 {
     private void OnTriggerStay(Collider other)
     {
-        if (other.gameObject.layer == 8)
+        if (other.gameObject.layer == 8 ||
+            other.gameObject.layer == 14)
         {
             FindObjectOfType<PlayerMovement>().isGrounded = true;
         }
@@ -14,7 +15,8 @@ public class DownPoint : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
-        if (other.gameObject.layer == 8)
+        if (other.gameObject.layer == 8 ||
+            other.gameObject.layer == 14)
         {
             FindObjectOfType<PlayerMovement>().isGrounded = false;
         }

@@ -1,11 +1,17 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
 public class FarmerAI : MonoBehaviour
 {
+    System.Random r = new System.Random();
     public float rayDistance;
     public float speed;
+
+    public static int size;
+    public Transform[] points = new Transform[size];
+    public NavMeshAgent agent;
 
     public Transform playerTransform;
     private Transform lastPlayerTransform;
@@ -19,7 +25,6 @@ public class FarmerAI : MonoBehaviour
 
     public bool isFinded;
 
-    int isFindedCounter = 0;
     float seconds = 0f;
 
     private void Start()
@@ -48,65 +53,77 @@ public class FarmerAI : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (isFinded)
+        if (!FindObjectOfType<PlayerMovement>().win)
         {
-            lastPlayerTransform = playerTransform;
-        }
-        if (!FindObjectOfType<PlayerMovement>().isGrabbed)
-        {
-            if (transform.position != lastPlayerTransform.position &&
-                    !FindObjectOfType<PlayerMovement>().isGrabbed &&
-                    !FindObjectOfType<PlayerMovement>().gameOver)
+            if (isFinded)
             {
-                rb.MovePosition(transform.position + transform.forward * speed * Time.deltaTime);
-                Vector3 direction = lastPlayerTransform.position - transform.position;
-                Quaternion lookRotation = Quaternion.LookRotation(new Vector3(direction.x, 0, direction.z));
-                transform.rotation = Quaternion.Lerp(transform.rotation, lookRotation, Time.deltaTime * 15f);
+                lastPlayerTransform = playerTransform;
             }
-            // create farmer`s vision
-            isFinded = false;
-            for (int j = 0; j <= 8; j++)
+            if (!FindObjectOfType<PlayerMovement>().isGrabbed)
             {
-                for (int i = 0; i < rays; i++)
+                if (isFinded &&
+                        !FindObjectOfType<PlayerMovement>().isGrabbed &&
+                        !FindObjectOfType<PlayerMovement>().gameOver)
                 {
-                    addRay(i, j / 20f);
+                    //rb.MovePosition(transform.position + transform.forward * speed * Time.deltaTime);
+                    //Vector3 direction = lastPlayerTransform.position - transform.position;
+                    //Quaternion lookRotation = Quaternion.LookRotation(new Vector3(direction.x, 0, direction.z));
+                    //transform.rotation = Quaternion.Lerp(transform.rotation, lookRotation, Time.deltaTime * 15f);
+                    // farmer go to Piggy
+                    agent.SetDestination(playerTransform.position);
+
+                }
+                // create farmer`s vision
+                isFinded = false;
+                for (int j = 0; j <= 8; j++)
+                {
+                    for (int i = 0; i < rays; i++)
+                    {
+                        addRay(i, j / 20f);
+                    }
+                }
+                if (!isFinded)
+                {
+                    // farmer lost sight of the piggy
+                    seconds += Time.deltaTime;
+                    if (seconds >= 3f)
+                    {
+                        seconds = 0f;
+                        agent.SetDestination(points[r.Next() % points.Length].position);
+                    }
+                }
+                else
+                {
+                    seconds = 0f;
                 }
             }
-            if (!isFinded)
+            if (isNextToPiggy)
             {
-                // farmer lost sight of the piggy
-                // we must rotate left, then right
-                //transform.eulerAngles = new Vector3(transform.eulerAngles.x, 
-                //    Mathf.Lerp(transform.eulerAngles.y, transform.eulerAngles.y - 80f, Time.deltaTime * 5f),
-                //    transform.eulerAngles.z);
-
+                FindObjectOfType<PlayerMovement>().transform.position = Vector3.Lerp(playerTransform.position, FindObjectOfType<PlayerMovement>().grabPoint.position, Time.deltaTime * 5f);
+                FindObjectOfType<PlayerMovement>().transform.rotation = Quaternion.Lerp(playerTransform.rotation, FindObjectOfType<PlayerMovement>().grabPoint.rotation, Time.deltaTime * 5f);
+                //if (FindObjectOfType<PlayerMovement>().transform.position == FindObjectOfType<PlayerMovement>().grabPoint.transform.position &&
+                //    FindObjectOfType<PlayerMovement>().transform.rotation == FindObjectOfType<PlayerMovement>().grabPoint.transform.rotation)
+                //{
+                FindObjectOfType<PlayerMovement>().isGrabbed = true;
+                FindObjectOfType<PlayerMovement>().rb.useGravity = false;
+                isNextToPiggy = false;
+                //}
             }
-        }
-        if (isNextToPiggy)
-        {
-            FindObjectOfType<PlayerMovement>().transform.position = Vector3.Lerp(playerTransform.position, FindObjectOfType<PlayerMovement>().grabPoint.position, Time.deltaTime * 5f);
-            FindObjectOfType<PlayerMovement>().transform.rotation = Quaternion.Lerp(playerTransform.rotation, FindObjectOfType<PlayerMovement>().grabPoint.rotation, Time.deltaTime * 5f);
-            //if (FindObjectOfType<PlayerMovement>().transform.position == FindObjectOfType<PlayerMovement>().grabPoint.transform.position &&
-            //    FindObjectOfType<PlayerMovement>().transform.rotation == FindObjectOfType<PlayerMovement>().grabPoint.transform.rotation)
-            //{
-            FindObjectOfType<PlayerMovement>().isGrabbed = true;
-            FindObjectOfType<PlayerMovement>().rb.useGravity = false;
-            isNextToPiggy = false;
-            //}
-        }
 
-        if (FindObjectOfType<PlayerMovement>().isGrabbed == true)
-        {
-            rb.MovePosition(transform.position + transform.forward * speed * Time.deltaTime);
-            Vector3 direction = piggyHomeTransform.position - transform.position;
-            Quaternion lookRotation = Quaternion.LookRotation(new Vector3(direction.x, 0, direction.z));
-            transform.rotation = Quaternion.Lerp(transform.rotation, lookRotation, Time.deltaTime * 15f);
+            if (FindObjectOfType<PlayerMovement>().isGrabbed == true && !FindObjectOfType<PlayerMovement>().gameOver)
+            {
+                agent.SetDestination(piggyHomeTransform.position);
+            }
+            else if (FindObjectOfType<PlayerMovement>().gameOver)
+            {
+                agent.SetDestination(new Vector3(0f, 0f, 0f));
+            }
         }
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.tag == "Player")
+        if (other.gameObject.tag == "Player" && !FindObjectOfType<PlayerMovement>().gameOver && !FindObjectOfType<PlayerMovement>().win)
         {
             // farmer grabs the piggy
             isNextToPiggy = true;

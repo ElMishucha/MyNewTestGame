@@ -91,7 +91,7 @@ public class PlayerMovement : MonoBehaviour
         if (transform.position == grabPoint.position && transform.rotation == grabPoint.rotation || isGrabbed == true)
         {
             transform.position = grabPoint.position;
-            transform.rotation = Quaternion.Euler(grabPoint.rotation.x, grabPoint.rotation.y, transform.rotation.z);
+            transform.rotation = Quaternion.Euler(grabPoint.eulerAngles.x, grabPoint.eulerAngles.y, transform.eulerAngles.z);
             rb.useGravity = false;
         }
 

@@ -6,6 +6,7 @@ TagManager:
   tags:
   - PiggyDownPoint
   - World
+  - ButtonE
   layers:
   - Default
   - TransparentFX
